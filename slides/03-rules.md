@@ -1,3 +1,5 @@
+# Thinking Distributedly
+
 # Visualization
 ## Merging Data Structures
 
@@ -28,8 +30,7 @@
 ## Multiple actions same effect
 * Painting a fence the same color
 * Opening a door
-b - a => r
-b - a - a - a - a => r
+* Running one lap
 
 # Enabler
 * Multiple retries
@@ -48,27 +49,27 @@ b - a - a - a - a => r
 (conj {:a 2 :b 3 :c 3} {:a 2}) ;; => 8
 ```
 
-# Before, After & During
-# Events vs messages
-## Wall Clock Time
+# Time
+## Before, After & During
+
+# Wall Clock Time
 ```clojure
-{:cart {:pear 1}} ;;; 1980-08-03 11:34:55
+{ :created-at "1980-08-03 11:34:55"
+  :cart {:pear 1}}
 ```
 
 # Physical Shortcomings
 * Each server has different time skew
 * Human Standards (e.g. Daylight Savings Time)
 
-# Logical Shortcomings
-* Created `{:pear 1}` at 1980-08-03 11:34:55
-* Message `{:pear 1} arrived at Alice at 1980-08-03 11:32:30
-* Message `{:pear 1} arrived at Bob at 1980-08-03 11:35:22
+# Logical Shortcomings{.hidden}
+## Logical Shortcomings
+![arrival times](./images/wall-clock-arrival-times.png)
 
 # Before and After
-* Before 1980-08-03 11:34:55 `{}`
-* After 1980-08-03 11:34:55 `{:pear 1}`
+`{}` - 1980-08-03 11:34:55 - `{:pear 1}`
 
-# No Absolute Time
+# Logical Time
 ## Before & After Causality
 * Events (e.g. created `{:pear 1}`)
 * Messages (e.g. received call from Alice)
@@ -80,12 +81,37 @@ b - a - a - a - a => r
 
 Tracks Causality what has happened before and after
 
-# Lamport Rules
-* Each Client Unique ID
-* Logical (Integer) Clock
-* Increment after every event
-* Send Clock with every message
-* Merge by taking maximum time for each client
+# Lamport Events
+```clojure
+(def lamport {:a 2 :b 2 :c 3})
+
+(event-time :c lamport)
+;;{:a 2 :b 2 :c 4}
+
+(event-time :a lamport)
+;;{:a 3 :b 2 :c 4}
+
+(event-time :b
+  (event-time :b lamport))
+;;{:a 2 :b 4 :c 3}
+```
+
+# Lamport Messages
+```clojure
+(def lamport {:a 2 :b 2 :c 3})
+
+(message lamport
+  {:a 3 :b 1 :c 2})
+;;{:a 3 :b 2 :c 3}
+
+(message lamport
+  {:c 4 :d 2})
+;;{:a 2 :b 2 :c 4 :d 2}
+
+(message lamport
+  {:a 3 :b 5 :c 6})
+;;{:a 3 :b 5 :c 6}
+```
 
 # Neither Before or After
 * `{:a 1 :b 0}` < `{:a 1 :b 1}`
@@ -96,7 +122,9 @@ Tracks Causality what has happened before and after
 
 # Total Order
 Everything is either smaller or larger than you
-2---------------5---------------------9
+      5
+      5----9
+ 3----5
 
 # Single Time Line
 11:10 -> 11:11 -> 11:12 -> 11:13
@@ -128,6 +156,9 @@ Always add information, either data or meta-data
      (intersection little-george big-george medium-george)))
 ```
 
+# Monotonic
+## Never go back to a previous state
+
 # Removing Items
 Deletion data set, tombstones, meta data
 
@@ -138,4 +169,33 @@ Two sets one for additions and one for deletions
 (let [additions #{:apple :pear}
       deletions #{:apple}]
       (difference additions deletions))
+```
+
+# Tombstones
+Add meta data to element marking as deleted
+
+```clojure
+(let [fruits #{:apple :pear}]
+  (tombstone :pear fruits))
+#{:apple [:deleted :pear]}
+
+(let [fruits #{[{:add #{1}} :apple] [{:add #{2}}] :pear}]
+  (add :pear
+    (tombstone :pear fruits)))
+#{[{:add #{1}} :apple] [{:add #{2 4} :delete #{3}} :pear]}
+```
+
+# Meta Data
+## Lmaport Timestamps
+
+```clojure
+(let [my-fruits {:timestamp {:a 2 :b 1}
+                   :data #{[:a 1 :apple]}}
+      your-fruits {:timestamp {:a 2 :b 2}
+                   :data #{[:a 1 :apple]
+                           [:b 1 :pear]
+                           [:b 2 :kiwi]}}]
+  (merge my-fruits your-fruits))
+{:timestamp {:a 2 :b 2}
+ :data #{[:a 1 :apple] [:b 2 :kiwi]}}
 ```
