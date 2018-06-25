@@ -1,0 +1,6 @@
+.code-highlight >  code {
+  background: white;
+}
+.hidden h1 {
+  display: none;
+}
