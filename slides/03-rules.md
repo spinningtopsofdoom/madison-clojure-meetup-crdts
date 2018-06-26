@@ -75,11 +75,7 @@
 * Messages (e.g. received call from Alice)
 
 # Lamport Timestamps
-{:a 0}---{:a 1}--------{:a 2}-----------------{:a 2 :b 1}
-                \                             /
--------{:b  0}---{:a 1 :b 0}----{:a 1 :b :1}-----------
-
-Tracks Causality what has happened before and after
+![Tracks Causality what has happened before and after](./images/lamport-timestamps.png)
 
 # Lamport Events
 ```clojure
@@ -120,22 +116,25 @@ Tracks Causality what has happened before and after
 
 # Before, After and Concurrent
 
-# Total Order
-Everything is either smaller or larger than you
-      5
-      5----9
- 3----5
+# Total Order{.hidden}
+## Total Order
+![Everything is either smaller or larger than you](./images/total-order.png)
 
 # Single Time Line
-11:10 -> 11:11 -> 11:12 -> 11:13
+![single history total order](./images/one-history.png)
 
-# Partial Order
-Elements can be smaller, larger,or indeterminate
+# Partial Order{.hidden}
+### Partial Order
+![Elements can be smaller, larger,or indeterminate](./images/partial-order.png)
 
 # Multiple Time Lines
-* `{:a 0}` -> `{:a 0 :b 0}` -> `{:a 1 :b 0}` -> `{:a 1 :b 1}`
-* `{:a 0}` -> `{:a 0 :b 1}` -> `{:a 1 :b 1}`
-* `{:a 0}` -> `{:a 1}` -> `{:a 1 :b 0}` -> `{:a 1 :b 1}`
+![first partial order history](./images/partial-order-history.png)
+
+# Multiple Time Lines Next{.hidden}
+![next partial order history](./images/partial-order-history-next.png)
+
+# Multiple Time Lines Final{.hidden}
+![final partial order history](./images/partial-order-history-final.png)
 
 # Monotonic
 Always add information, either data or meta-data
