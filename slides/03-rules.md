@@ -186,7 +186,7 @@ Add meta data to element marking as deleted
 ```
 
 # Meta Data
-## Lmaport Timestamps
+## Lamport Timestamps
 
 ```clojure
 (let [my-fruits {:timestamp {:a 2 :b 1}
