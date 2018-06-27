@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Peter Schuck">
+  <title>CRDT Distributed Safety Net</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="./reveal-js/css/reveal.css">
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="./reveal-js/css/theme/black.css" id="theme">
+  <link rel="stylesheet" href="reveal-js/css/custom.css"/>
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? './reveal-js/css/print/pdf.css' : './reveal-js/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="./reveal-js/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section>
+  <h1 class="title">CRDT Distributed Safety Net</h1>
+  <p class="author">Peter Schuck</p>
+  <p class="date">Bendyworks</p>
+</section>
+
+<section id="overview" class="slide level1">
+<h1>Overview</h1>
+<ul>
+<li>Consistent High Availability</li>
+<li>Guidelines for Distributed Data Structures</li>
+<li>Example CRDT's</li>
+</ul>
+</section>
+<section id="crdt-like-systems" class="slide level1">
+<h1>CRDT Like Systems</h1>
+<ul>
+<li>CrowdSourcing Estimates (e.g number of Jelly Beans)</li>
+<li>Flocks of birds</li>
+<li>Boarding a airplane (free for all)</li>
+</ul>
+</section>
+<section id="non-crdts" class="slide level1">
+<h1>Non CRDT's</h1>
+<ul>
+<li>Passage of legislation</li>
+<li>Game of Chess</li>
+<li>Boarding a airplane (by section)</li>
+</ul>
+</section>
+<section id="bank-example" class="slide level1">
+<h1>Bank Example</h1>
+<p>Deposit, withdraw, transfer, setup new accounts at any local branch or ATM. My local actions are independent of any other bank customers.</p>
+</section>
+<section id="problem" class="slide level1">
+<h1>Problem</h1>
+<p>Maintain a coherent state of the system with out coordination central arbitrator.</p>
+</section>
+<section id="formal-definition" class="slide level1">
+<h1>Formal Definition</h1>
+<h2 id="strong-eventual-consistency">Strong Eventual Consistency</h2>
+</section>
+<section id="coherence" class="slide level1">
+<h1>Coherence</h1>
+<p>Ensuring all nodes in the system see the same state (eventually)</p>
+</section>
+<section id="eventual-consistency" class="slide level1 hidden">
+<h1>Eventual Consistency</h1>
+<h2 id="eventual-consistency-1">Eventual Consistency</h2>
+<figure>
+<img src="./images/eventual-consistency.png" alt="Eventual Consistency Diagram Example" /><figcaption>Eventual Consistency Diagram Example</figcaption>
+</figure>
+</section>
+<section id="strong-eventual-consistency-1" class="slide level1 hidden">
+<h1>Strong Eventual Consistency</h1>
+<h3 id="strong-eventual-consistency-2">Strong Eventual Consistency</h3>
+<figure>
+<img src="./images/strong-eventual-consistency.png" alt="Strong Eventual Consistency Diagram Example" /><figcaption>Strong Eventual Consistency Diagram Example</figcaption>
+</figure>
+</section>
+<section id="same-final-state" class="slide level1 hidden">
+<h1>Same Final State</h1>
+<h2 id="same-final-state-1">Same Final State</h2>
+<figure>
+<img src="./images/strong-eventual-consistency-final.png" alt="Strong Eventual Consistency Same Final State" /><figcaption>Strong Eventual Consistency Same Final State</figcaption>
+</figure>
+</section>
+<section id="network-constraints" class="slide level1 hidden">
+<h1>Network Constraints</h1>
+<h4 id="network-constraints-1">Network Constraints</h4>
+<figure>
+<img src="./images/network-constraints.png" alt="Network Constraints" /><figcaption>Network Constraints</figcaption>
+</figure>
+</section>
+<section id="economics" class="slide level1">
+<h1>Economics</h1>
+<ul>
+<li>Maximize availability</li>
+<li>Minimize message size</li>
+<li>Minimize total number of messages</li>
+<li>Act as though everything is local</li>
+</ul>
+</section>
+<section id="non-concerns" class="slide level1">
+<h1>Non concerns</h1>
+<ul>
+<li>Minimize storage size</li>
+<li>Maximize Efficiency of nodes</li>
+</ul>
+</section>
+<section id="communication-costs-much-more-than-computation" class="slide level1">
+<h1>Communication costs much more than Computation</h1>
+</section>
+<section id="thinking-distributedly" class="slide level1">
+<h1>Thinking Distributedly</h1>
+</section>
+<section id="guidelines" class="slide level1">
+<h1>Guidelines</h1>
+<ul>
+<li>Visualization</li>
+<li>Idempotent</li>
+<li>Time</li>
+<li>Partial Orders</li>
+<li>Monotonic</li>
+</ul>
+</section>
+<section id="fiddly-bits" class="slide level1">
+<h1>Fiddly Bits</h1>
+<h2 id="state-meta-data-combinatorial-orders-duplication">State, Meta Data, Combinatorial Orders, Duplication</h2>
+</section>
+<section id="visualization" class="slide level1">
+<h1>Visualization</h1>
+<h2 id="merging-data-structures">Merging Data Structures</h2>
+<p>All information and meta data that the CRDT is composed of</p>
+</section>
+<section id="simple-set" class="slide level1">
+<h1>Simple Set</h1>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">let</span> [car #{<span class="at">:car</span>}
+      hose #{<span class="at">:hose</span>}
+      coat #{<span class="at">:coat</span>}])
+(<span class="kw">=</span> (<span class="kw">conj</span> (<span class="kw">conj</span> car hose) coat)
+   (<span class="kw">conj</span> car (<span class="kw">conj</span> (<span class="kw">conj</span> car hose) coat))
+   (<span class="kw">conj</span> (<span class="kw">conj</span> hose coat) car))</code></pre></div>
+</section>
+<section id="fruit-counter" class="slide level1">
+<h1>Fruit Counter</h1>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">let</span> [alice {<span class="at">:apple</span> <span class="dv">5</span> <span class="at">:orange</span> <span class="dv">6</span>}
+      bob {<span class="at">:orange</span> <span class="dv">4</span> <span class="at">:pear</span> <span class="dv">3</span>}
+      charlie {<span class="at">:pear</span> <span class="dv">5</span> <span class="at">:apple</span> <span class="dv">2</span>}])
+  (<span class="kw">=</span> (fruit-count alice bob charlie) <span class="co">;; 16</span>
+     (fruit-count alice bob bob charlie)
+     (fruit-count bob alice charlie))</code></pre></div>
+</section>
+<section id="benefits" class="slide level1">
+<h1>Benefits</h1>
+<ul>
+<li>Ephemeral Details are made concrete</li>
+<li>Can play around with it locally</li>
+<li>Easy to change &quot;network&quot;</li>
+</ul>
+</section>
+<section id="idempotent" class="slide level1">
+<h1>Idempotent</h1>
+<h2 id="multiple-actions-same-effect">Multiple actions same effect</h2>
+<ul>
+<li>Painting a fence the same color</li>
+<li>Opening a door</li>
+<li>Running one lap</li>
+</ul>
+</section>
+<section id="enabler" class="slide level1">
+<h1>Enabler</h1>
+<ul>
+<li>Multiple retries</li>
+<li>Replace a slow / crashed server</li>
+</ul>
+</section>
+<section id="naturally-idempotent" class="slide level1">
+<h1>Naturally Idempotent</h1>
+<ul>
+<li>Adding items to a set</li>
+<li>Taking the maximum number</li>
+</ul>
+</section>
+<section id="idempotent-operations" class="slide level1">
+<h1>Idempotent Operations</h1>
+<h2 id="unique-identifier">Unique identifier</h2>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure"><span class="co">;; Non Idempotent</span>
+(<span class="kw">conj</span> [<span class="dv">2</span> <span class="dv">3</span> <span class="dv">3</span>] <span class="dv">2</span>) <span class="co">;; =&gt; 10</span>
+<span class="co">;; Idempotent</span>
+(<span class="kw">conj</span> {<span class="at">:a</span> <span class="dv">2</span> <span class="at">:b</span> <span class="dv">3</span> <span class="at">:c</span> <span class="dv">3</span>} {<span class="at">:a</span> <span class="dv">2</span>}) <span class="co">;; =&gt; 8</span></code></pre></div>
+</section>
+<section id="time" class="slide level1">
+<h1>Time</h1>
+<h2 id="before-after-during">Before, After &amp; During</h2>
+</section>
+<section id="wall-clock-time" class="slide level1">
+<h1>Wall Clock Time</h1>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">{ <span class="at">:created-at</span> <span class="st">&quot;1980-08-03 11:34:55&quot;</span>
+  <span class="at">:cart</span> {<span class="at">:pear</span> <span class="dv">1</span>}}</code></pre></div>
+</section>
+<section id="physical-shortcomings" class="slide level1">
+<h1>Physical Shortcomings</h1>
+<ul>
+<li>Each server has different time skew</li>
+<li>Human Standards (e.g. Daylight Savings Time)</li>
+</ul>
+</section>
+<section id="logical-shortcomings" class="slide level1 hidden">
+<h1>Logical Shortcomings</h1>
+<h2 id="logical-shortcomings-1">Logical Shortcomings</h2>
+<figure>
+<img src="./images/wall-clock-arrival-times.png" alt="arrival times" /><figcaption>arrival times</figcaption>
+</figure>
+</section>
+<section id="before-and-after" class="slide level1">
+<h1>Before and After</h1>
+<p><code>{}</code> - 1980-08-03 11:34:55 - <code>{:pear 1}</code></p>
+</section>
+<section id="logical-time" class="slide level1">
+<h1>Logical Time</h1>
+<h2 id="before-after-causality">Before &amp; After Causality</h2>
+<ul>
+<li>Events (e.g. created <code>{:pear 1}</code>)</li>
+<li>Messages (e.g. received call from Alice)</li>
+</ul>
+</section>
+<section id="lamport-timestamps" class="slide level1">
+<h1>Lamport Timestamps</h1>
+<figure>
+<img src="./images/lamport-timestamps.png" alt="Tracks Causality what has happened before and after" /><figcaption>Tracks Causality what has happened before and after</figcaption>
+</figure>
+</section>
+<section id="lamport-events" class="slide level1">
+<h1>Lamport Events</h1>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="bu">def</span><span class="fu"> lamport </span>{<span class="at">:a</span> <span class="dv">2</span> <span class="at">:b</span> <span class="dv">2</span> <span class="at">:c</span> <span class="dv">3</span>})
+
+(event-time <span class="at">:c</span> lamport)
+<span class="co">;;{:a 2 :b 2 :c 4}</span>
+
+(event-time <span class="at">:a</span> lamport)
+<span class="co">;;{:a 3 :b 2 :c 4}</span>
+
+(event-time <span class="at">:b</span>
+  (event-time <span class="at">:b</span> lamport))
+<span class="co">;;{:a 2 :b 4 :c 3}</span></code></pre></div>
+</section>
+<section id="lamport-messages" class="slide level1">
+<h1>Lamport Messages</h1>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="bu">def</span><span class="fu"> lamport </span>{<span class="at">:a</span> <span class="dv">2</span> <span class="at">:b</span> <span class="dv">2</span> <span class="at">:c</span> <span class="dv">3</span>})
+
+(message lamport
+  {<span class="at">:a</span> <span class="dv">3</span> <span class="at">:b</span> <span class="dv">1</span> <span class="at">:c</span> <span class="dv">2</span>})
+<span class="co">;;{:a 3 :b 2 :c 3}</span>
+
+(message lamport
+  {<span class="at">:c</span> <span class="dv">4</span> <span class="at">:d</span> <span class="dv">2</span>})
+<span class="co">;;{:a 2 :b 2 :c 4 :d 2}</span>
+
+(message lamport
+  {<span class="at">:a</span> <span class="dv">3</span> <span class="at">:b</span> <span class="dv">5</span> <span class="at">:c</span> <span class="dv">6</span>})
+<span class="co">;;{:a 3 :b 5 :c 6}</span></code></pre></div>
+</section>
+<section id="neither-before-or-after" class="slide level1">
+<h1>Neither Before or After</h1>
+<ul>
+<li><code>{:a 1 :b 0}</code> &lt; <code>{:a 1 :b 1}</code></li>
+<li><code>{:a 0 :b 1}</code> &lt; <code>{:a 1 :b 1}</code></li>
+<li><code>{:a 1 :b 0}</code> ? <code>{:a 0 :b 1}</code></li>
+</ul>
+</section>
+<section id="before-after-and-concurrent" class="slide level1">
+<h1>Before, After and Concurrent</h1>
+</section>
+<section id="total-order" class="slide level1 hidden">
+<h1>Total Order</h1>
+<h2 id="total-order-1">Total Order</h2>
+<figure>
+<img src="./images/total-order.png" alt="Everything is either smaller or larger than you" /><figcaption>Everything is either smaller or larger than you</figcaption>
+</figure>
+</section>
+<section id="single-time-line" class="slide level1">
+<h1>Single Time Line</h1>
+<figure>
+<img src="./images/one-history.png" alt="single history total order" /><figcaption>single history total order</figcaption>
+</figure>
+</section>
+<section id="partial-order" class="slide level1 hidden">
+<h1>Partial Order</h1>
+<h3 id="partial-order-1">Partial Order</h3>
+<figure>
+<img src="./images/partial-order.png" alt="Elements can be smaller, larger,or indeterminate" /><figcaption>Elements can be smaller, larger,or indeterminate</figcaption>
+</figure>
+</section>
+<section id="multiple-time-lines" class="slide level1">
+<h1>Multiple Time Lines</h1>
+<figure>
+<img src="./images/partial-order-history.png" alt="first partial order history" /><figcaption>first partial order history</figcaption>
+</figure>
+</section>
+<section id="multiple-time-lines-next" class="slide level1 hidden">
+<h1>Multiple Time Lines Next</h1>
+<figure>
+<img src="./images/partial-order-history-next.png" alt="next partial order history" /><figcaption>next partial order history</figcaption>
+</figure>
+</section>
+<section id="multiple-time-lines-final" class="slide level1 hidden">
+<h1>Multiple Time Lines Final</h1>
+<figure>
+<img src="./images/partial-order-history-final.png" alt="final partial order history" /><figcaption>final partial order history</figcaption>
+</figure>
+</section>
+<section id="monotonic" class="slide level1">
+<h1>Monotonic</h1>
+<p>Always add information, either data or meta-data</p>
+</section>
+<section id="information-never-removed" class="slide level1">
+<h1>Information never removed</h1>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">disj</span> (<span class="kw">conj</span> #{<span class="at">:b</span> <span class="at">:c</span>} <span class="at">:a</span>) <span class="at">:a</span>) <span class="co">;; #{:b :c :a}</span>
+(<span class="kw">conj</span> (<span class="kw">disj</span> #{<span class="at">:b</span> <span class="at">:c</span>} <span class="at">:a</span>) <span class="at">:a</span>) <span class="co">;; #{:b :c}</span></code></pre></div>
+</section>
+<section id="size-can-decrease" class="slide level1">
+<h1>Size can decrease</h1>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">let</span> [big-george #{<span class="at">:a</span> <span class="at">:b</span> <span class="at">:c</span>}
+      medium-george #{<span class="at">:a</span> <span class="at">:c</span>}
+      little-george #{<span class="at">:b</span>}]
+  (<span class="kw">=</span> (<span class="kw">intersection</span> big-george medium-george little-george)
+     (<span class="kw">intersection</span> little-george big-george medium-george)))</code></pre></div>
+</section>
+<section id="monotonic-1" class="slide level1">
+<h1>Monotonic</h1>
+<h2 id="never-go-back-to-a-previous-state">Never go back to a previous state</h2>
+</section>
+<section id="removing-items" class="slide level1">
+<h1>Removing Items</h1>
+<p>Deletion data set, tombstones, meta data</p>
+</section>
+<section id="deletion-data-set" class="slide level1">
+<h1>Deletion data set</h1>
+<p>Two sets one for additions and one for deletions</p>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">let</span> [additions #{<span class="at">:apple</span> <span class="at">:pear</span>}
+      deletions #{<span class="at">:apple</span>}]
+      (<span class="kw">difference</span> additions deletions))</code></pre></div>
+</section>
+<section id="tombstones" class="slide level1">
+<h1>Tombstones</h1>
+<p>Add meta data to element marking as deleted</p>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">let</span> [fruits #{<span class="at">:apple</span> <span class="at">:pear</span>}]
+  (tombstone <span class="at">:pear</span> fruits))
+#{<span class="at">:apple</span> [<span class="at">:deleted</span> <span class="at">:pear</span>]}
+
+(<span class="kw">let</span> [fruits #{[{<span class="at">:add</span> #{<span class="dv">1</span>}} <span class="at">:apple</span>] [{<span class="at">:add</span> #{<span class="dv">2</span>}}] <span class="at">:pear</span>}]
+  (add <span class="at">:pear</span>
+    (tombstone <span class="at">:pear</span> fruits)))
+#{[{<span class="at">:add</span> #{<span class="dv">1</span>}} <span class="at">:apple</span>] [{<span class="at">:add</span> #{<span class="dv">2</span> <span class="dv">4</span>} <span class="at">:delete</span> #{<span class="dv">3</span>}} <span class="at">:pear</span>]}</code></pre></div>
+</section>
+<section id="meta-data" class="slide level1">
+<h1>Meta Data</h1>
+<h2 id="lamport-timestamps-1">Lamport Timestamps</h2>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">let</span> [my-fruits {<span class="at">:timestamp</span> {<span class="at">:a</span> <span class="dv">2</span> <span class="at">:b</span> <span class="dv">1</span>}
+                   <span class="at">:data</span> #{[<span class="at">:a</span> <span class="dv">1</span> <span class="at">:apple</span>]}}
+      your-fruits {<span class="at">:timestamp</span> {<span class="at">:a</span> <span class="dv">2</span> <span class="at">:b</span> <span class="dv">2</span>}
+                   <span class="at">:data</span> #{[<span class="at">:a</span> <span class="dv">1</span> <span class="at">:apple</span>]
+                           [<span class="at">:b</span> <span class="dv">1</span> <span class="at">:pear</span>]
+                           [<span class="at">:b</span> <span class="dv">2</span> <span class="at">:kiwi</span>]}}]
+  (<span class="kw">merge</span> my-fruits your-fruits))
+{<span class="at">:timestamp</span> {<span class="at">:a</span> <span class="dv">2</span> <span class="at">:b</span> <span class="dv">2</span>}
+ <span class="at">:data</span> #{[<span class="at">:a</span> <span class="dv">1</span> <span class="at">:apple</span>] [<span class="at">:b</span> <span class="dv">2</span> <span class="at">:kiwi</span>]}}</code></pre></div>
+</section>
+<section id="crdts" class="slide level1">
+<h1>CRDTS</h1>
+<h2 id="unordered-sets-unordered-maps-ordered-text">Unordered Sets, Unordered Maps, Ordered Text</h2>
+</section>
+<section id="sets" class="slide level1">
+<h1>Sets</h1>
+<h2 id="simplest-first-crdts">Simplest first CRDT's</h2>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">union</span> #{<span class="at">:a</span> <span class="at">:b</span>} #{<span class="at">:b</span> <span class="at">:c</span>} #{<span class="at">:d</span>})
+#{<span class="at">:a</span> <span class="at">:b</span> <span class="at">:c</span> <span class="at">:d</span>}</code></pre></div>
+</section>
+<section id="deletion" class="slide level1">
+<h1>Deletion</h1>
+<h2 id="semantics-of-the-operation">Semantics of the operation</h2>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">let</span> [alice {<span class="at">:add</span> #{<span class="at">:a</span>} <span class="at">:delete</span> #{<span class="at">:a</span>}}
+      bob {<span class="at">:add</span> #{<span class="at">:a</span>}}
+      carol {<span class="at">:delete</span> #{<span class="at">:a</span>}}]
+  (<span class="kw">=</span> (<span class="kw">merge</span> alice bob carol)
+     (<span class="kw">merge</span> carol bob alice)
+     (<span class="kw">merge</span> bob alice carol)))</code></pre></div>
+</section>
+<section id="observe-remove" class="slide level1">
+<h1>Observe Remove</h1>
+<p>An item can only be removed after it's been observed. Each item is uniquely identified by the client name and time stamp</p>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">let</span> [alice {<span class="at">:add</span> #{[<span class="at">:a</span> <span class="dv">0</span> <span class="at">:a</span>]} <span class="at">:delete</span> #{[<span class="at">:a</span> <span class="dv">0</span> <span class="at">:a</span>]}}
+      bob {<span class="at">:add</span> #{[<span class="at">:b</span> <span class="dv">0</span> <span class="at">:a</span>]}}
+      carol {}]
+  (<span class="kw">=</span> (<span class="kw">merge</span> alice bob carol)
+     (<span class="kw">merge</span> carol bob alice)
+     (<span class="kw">merge</span> bob alice carol)))
+#{<span class="at">:add</span> #{[<span class="at">:b</span> <span class="dv">0</span> <span class="at">:a</span>]}}</code></pre></div>
+</section>
+<section id="maps" class="slide level1">
+<h1>Maps</h1>
+<h2 id="set-of-key-value-pairs">Set of Key Value Pairs :)</h2>
+</section>
+<section id="map-updates" class="slide level1">
+<h1>Map Updates</h1>
+<h2 id="more-than-one-client-updates-a-key-at-the-same-time">More than one client updates a key at the same time</h2>
+</section>
+<section id="arbitrary-tiebreaker" class="slide level1">
+<h1>Arbitrary Tiebreaker</h1>
+<h2 id="client-id-and-timestamp">Client ID and timestamp</h2>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">let</span> [alice #{[<span class="at">:a</span> <span class="dv">1</span> [<span class="at">:foo</span> <span class="at">:bar</span>]] [<span class="at">:a</span> <span class="dv">3</span> [<span class="at">:foo</span> <span class="at">:baz</span>]]}
+      bob #{[<span class="at">:b</span> <span class="dv">0</span> [<span class="at">:foo</span> <span class="at">:foo</span>]]}]
+  (sort-updates alice bob))
+[[<span class="at">:b</span> <span class="dv">0</span>] [<span class="at">:a</span> <span class="dv">1</span>] [<span class="at">:a</span> <span class="dv">3</span>]] <span class="co">;; min client</span>
+[[<span class="at">:a</span> <span class="dv">1</span>] [<span class="at">:a</span> <span class="dv">3</span>] [<span class="at">:b</span> <span class="dv">0</span>]] <span class="co">;; max client</span></code></pre></div>
+</section>
+<section id="ordered-text" class="slide level1">
+<h1>Ordered Text</h1>
+<h2 id="easier-than-you-would-think">Easier than you would think</h2>
+</section>
+<section id="unique-identifiers" class="slide level1">
+<h1>Unique Identifiers</h1>
+<h2 id="hello">&quot;Hello&quot;</h2>
+<h2 id="to">to</h2>
+<h2 id="h-0-e-1-l-2-l-3-o-4">[['H' 0] ['e' 1] ['l' 2] ['l' 3] ['o' 4]]</h2>
+</section>
+<section id="adding-text" class="slide level1">
+<h1>Adding text</h1>
+<h4 id="add-after-identifier-with-new-characters-and-identifiers">Add after identifier with new characters and identifiers</h4>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">let</span> [word [[<span class="at">&#39;b&#39;</span> <span class="dv">0</span>] [<span class="at">&#39;a&#39;</span> <span class="dv">1</span>] [<span class="at">&#39;r&#39;</span> <span class="dv">2</span>]]
+      added-text [<span class="dv">0</span> [[<span class="at">&#39;e&#39;</span> <span class="dv">3</span>]]]]
+    (new-word added-text word))
+[[<span class="at">&#39;b&#39;</span> <span class="dv">0</span>] [<span class="at">&#39;e&#39;</span> <span class="dv">3</span>] [<span class="at">&#39;a&#39;</span> <span class="dv">1</span>] [<span class="at">&#39;r&#39;</span> <span class="dv">2</span>]]</code></pre></div>
+</section>
+<section id="concurrent-adds" class="slide level1">
+<h1>Concurrent Adds</h1>
+<h2 id="same-as-concurrent-map-updates">Same as Concurrent Map Updates</h2>
+</section>
+<section id="linear-id-growth" class="slide level1">
+<h1>Linear ID Growth</h1>
+<h2 id="id-size-equal-to-the-number-of-additions">ID size equal to the number of additions</h2>
+<h3 id="h-4999-i-5000">[['h' 4999] ['i' 5000]]</h3>
+</section>
+<section id="log-growth" class="slide level1">
+<h1>Log Growth</h1>
+<ul>
+<li>[000, 001, 010, 011, 100, 101, 110, 111] =&gt; 24 bits</li>
+<li>[0, 1, 10, 11, 100, 101, 110, 111] =&gt; 18 bits</li>
+<li>[0, 1, 00, 01, 10, 11, 000, 001] =&gt; 16 bits</li>
+</ul>
+</section>
+<section id="further-problem" class="slide level1">
+<h1>Further problem</h1>
+<h2 id="additions-can-be-anywhere">Additions can be anywhere</h2>
+</section>
+<section id="trees-to-the-rescue" class="slide level1 hidden">
+<h1>Trees to the rescue</h1>
+<h2 id="trees-to-the-rescue-1">Trees to the rescue</h2>
+<h3 id="h-0.0-e-0.1-l-1-l-1.0-o">[[0 'h'] [0.0 'e'] [0.1 'l'] [1 'l'] [1.0 'o']]</h3>
+<figure>
+<img src="./images/lseq-text-doc.png" alt="LSEQ Text Tree" /><figcaption>LSEQ Text Tree</figcaption>
+</figure>
+</section>
+<section id="final-thoughts" class="slide level1 hidden">
+<h1>Final Thoughts</h1>
+<h2 id="crdts-are-tricky-beasts-you-need-to-learn-to-think-distributedly">CRDT's are tricky beasts, you need to learn to think distributedly</h2>
+</section>
+<section id="guidelines-1" class="slide level1">
+<h1>Guidelines</h1>
+<ul>
+<li>Visualize State merges</li>
+<li>Idempotent</li>
+<li>Repeated action same result</li>
+<li>Monotonic</li>
+<li>Never go back to the same state</li>
+<li>Logical Time</li>
+<li>Messages and Events</li>
+<li>Partial Order</li>
+<li><code>&lt;</code>, <code>&gt;</code>, <code>?</code></li>
+</ul>
+</section>
+<section id="questions" class="slide level1">
+<h1>Questions?</h1>
+</section>
+    </div>
+  </div>
+
+  <script src="./reveal-js/lib/js/head.min.js"></script>
+  <script src="./reveal-js/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: './reveal-js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: './reveal-js/plugin/zoom-js/zoom.js', async: true },
+              { src: './reveal-js/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
