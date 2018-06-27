@@ -1,30 +1,45 @@
 # Thinking Distributedly
 
+# Guidelines
+* Visualization
+* Idempotent
+* Time
+* Partial Orders
+* Monotonic
+
+# Fiddly Bits
+## State, Meta Data, Combinatorial Orders, Duplication
+
 # Visualization
 ## Merging Data Structures
+All information and meta data that the CRDT is composed of
+
+# Simple Set
 
 ```clojure
 (let [car #{:car}
       hose #{:hose}
       coat #{:coat}])
 (= (conj (conj car hose) coat)
+   (conj car (conj (conj car hose) coat))
    (conj (conj hose coat) car))
 ```
 
 # Fruit Counter
 
 ```clojure
-(let [a {:apple 5 :orange 6}
-      b {:orange 4 :pear 3}
-      c {:pear 5 :apple 2}])
-  (= (fruit-count a b c) ;; 16  
-     (fruit-count b a c))
+(let [alice {:apple 5 :orange 6}
+      bob {:orange 4 :pear 3}
+      charlie {:pear 5 :apple 2}])
+  (= (fruit-count alice bob charlie) ;; 16
+     (fruit-count alice bob bob charlie)
+     (fruit-count bob alice charlie))
 ```
 
 # Benefits
-* All information is in one place
+* Ephemeral Details are made concrete
 * Can play around with it locally
-* Deal with values instead of history
+* Easy to change "network"
 
 # Idempotent
 ## Multiple actions same effect
