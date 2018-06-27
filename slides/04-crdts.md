@@ -68,10 +68,17 @@ An item can only be removed after it's been observed. Each item is uniquely iden
 
 # Linear ID Growth
 ## ID size equal to the number of additions
-### [['h' 8936634546] ['i' 8936634547]]
+### [['h' 4999] ['i' 5000]]
 
-# Trees to the rescue
-[][0 'h'] [0.0 'e'] [0.1 'l'] [1 'l'] [1.0 'o ']]
-  [0 'h'] ---------[1 'l']
-  /     \             /
-[0 'e']  [1 'l']   [0 'o']
+# Log Growth
+* [000, 001, 010, 011, 100, 101, 110, 111] => 24 bits
+* [0, 1, 10, 11, 100, 101, 110, 111] =>  18 bits
+* [0, 1, 00, 01, 10, 11, 000, 001] => 16 bits
+
+# Further problem
+## Additions can be anywhere
+
+# Trees to the rescue{.hidden}
+## Trees to the rescue
+### [[0 'h'] [0.0 'e'] [0.1 'l'] [1 'l'] [1.0 'o']]
+![LSEQ Text Tree](./images/lseq-text-doc.png)
